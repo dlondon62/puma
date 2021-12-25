@@ -40,6 +40,35 @@
 #include "shuffleF_emxAPI.h"
 #include "shuffleF_terminate.h"
 #include "shuffleF_types.h"
+#include <iostream>
+
+/* non-generated functions */
+std::ostream& operator<<(std::ostream& s_, emxArray_real_T& array_)
+{
+  if (array_.size == nullptr)
+    s_ << "INVALID: NULL SIZE";
+  else if (array_.data == nullptr)
+    s_ << "INVALID: NULL DATA";
+  else
+  {
+    s_ << "[" << *(array_.size) << "]" << "={";
+    for (auto i = 0; i < *(array_.size); ++i)
+    {
+      s_ << array_.data[i] << ",";
+    }
+    s_ << "}";
+  }
+  return s_;
+}
+
+std::ostream& operator<<(std::ostream& s_, emxArray_real_T *array_)
+{
+  if (array_ == nullptr)
+    s_ << "NULL";
+  else 
+    s_ << *array_;
+  return s_;
+}
 
 /* Function Declarations */
 static emxArray_real_T *argInit_Unboundedx1_real_T(void);
@@ -129,6 +158,11 @@ static void main_shuffleF(void)
 
   /* Initialize function input argument 'ind'. */
   ind = argInit_Unboundedx1_real_T();
+
+  std::cout << "X"     << X << std::endl
+            << "y"     << y << std::endl 
+            << "ind="  << ind
+            << std::endl;
 
   /* Call the entry-point 'shuffleF'. */
   shuffleF(X, y, ind, argInit_real_T(), F);

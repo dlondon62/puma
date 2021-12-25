@@ -14,7 +14,7 @@ SAMPLE_SRCS               = $(START_DIR)/sample/sample.cpp
 SAMPLE_BIN                = shuffleF_sample
 
 $(SAMPLE_BIN): $(SAMPLE_SRCS) $(PRODUCT)
-	$(CC) "$<" $(START_DIR)/$(PRODUCT) $(INCLUDES) $(CPP_LDFLAGS) -o "$@"
+	$(CPP) "$<" $(START_DIR)/$(PRODUCT) $(INCLUDES) $(CPP_LDFLAGS) $(CPP_STANDARD_OPTS) -o "$@"
 
 all_binaries : $(SAMPLE_BIN)
 

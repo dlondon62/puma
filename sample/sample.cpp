@@ -45,19 +45,19 @@
 /* non-generated functions */
 std::ostream& operator<<(std::ostream& s_, emxArray_real_T& array_)
 {
-  if (array_.size == nullptr)
-    s_ << "INVALID: NULL SIZE";
-  else if (array_.data == nullptr)
-    s_ << "INVALID: NULL DATA";
+  s_ << "[" << array_.numDimensions << "]" << "={";
+  if (array_.data == nullptr)
+     s_ << "NULL DATA VECTOR";
   else
   {
-    s_ << "[" << *(array_.size) << "]" << "={";
-    for (auto i = 0; i < *(array_.size); ++i)
+    for (auto i = 0; i < array_.numDimensions; ++i)
     {
-      s_ << array_.data[i] << ",";
+        if (i != 0)
+            s_ << ",";
+        s_ << array_.data[i];
     }
-    s_ << "}";
   }
+  s_ << "}";
   return s_;
 }
 
@@ -159,13 +159,16 @@ static void main_shuffleF(void)
   /* Initialize function input argument 'ind'. */
   ind = argInit_Unboundedx1_real_T();
 
-  std::cout << "X"     << X << std::endl
+  std::cout << "arguments before call to shuffleF"
+            << "X"     << X << std::endl
             << "y"     << y << std::endl 
-            << "ind="  << ind
+            << "ind"  << ind << std::endl
+            << "F"    << F
             << std::endl;
 
   /* Call the entry-point 'shuffleF'. */
   shuffleF(X, y, ind, argInit_real_T(), F);
+  std::cout << "F after call to shuffleF" << F << std::endl;
   emxDestroyArray_real_T(F);
   emxDestroyArray_real_T(ind);
   emxDestroyArray_real_T(y);

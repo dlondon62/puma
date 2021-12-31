@@ -45,17 +45,15 @@
 /* non-generated functions */
 std::ostream& operator<<(std::ostream& s_, emxArray_real_T& array_)
 {
-  s_ << "[" << array_.numDimensions << "]" << "={";
-  if (array_.data == nullptr)
-     s_ << "NULL DATA VECTOR";
-  else
+  s_ << "[" << array_.numDimensions << "], allocated size=" << array_.allocatedSize << "={";
+  for (auto i = 0; i < array_.numDimensions; ++i)
   {
-    for (auto i = 0; i < array_.numDimensions; ++i)
-    {
-        if (i != 0)
-            s_ << ",";
+    if (i != 0)
+        s_ << ",";
+    if (array_.data)
         s_ << array_.data[i];
-    }
+    else
+        s_ << "NULL";
   }
   s_ << "}";
   return s_;

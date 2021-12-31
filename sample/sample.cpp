@@ -157,7 +157,8 @@ static void main_shuffleF(void)
   /* Initialize function input argument 'ind'. */
   ind = argInit_Unboundedx1_real_T();
 
-  std::cout << "arguments before call to shuffleF"
+  std::cout << std::endl << "arguments before call to shuffleF"
+            << std::endl
             << "X"     << X << std::endl
             << "y"     << y << std::endl 
             << "ind"  << ind << std::endl
@@ -166,7 +167,12 @@ static void main_shuffleF(void)
 
   /* Call the entry-point 'shuffleF'. */
   shuffleF(X, y, ind, argInit_real_T(), F);
-  std::cout << "F after call to shuffleF" << F << std::endl;
+  std::cout << std::endl << "arguments after call to shuffleF"
+            << "X"    << X << std::endl
+            << "y"    << y << std::endl 
+            << "ind"  << ind << std::endl
+            << "F"    << F
+            << std::endl;
   emxDestroyArray_real_T(F);
   emxDestroyArray_real_T(ind);
   emxDestroyArray_real_T(y);

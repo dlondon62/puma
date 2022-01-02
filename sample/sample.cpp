@@ -34,13 +34,33 @@
 /*************************************************************************/
 
 /* Include Files */
-#include "main.h"
+#include "sample.h"
 #include "rt_nonfinite.h"
 #include "shuffleF.h"
 #include "shuffleF_emxAPI.h"
 #include "shuffleF_terminate.h"
 #include "shuffleF_types.h"
 #include <iostream>
+#include <fstream>
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string>
+
+using namespace std;
+
+static void usage(const char *pgm_)
+{
+  std::cout << "usage: "              << pgm_
+            << "-X <X_FILENAME> "     << std::endl          
+            << "-Y<Y_FILENAME> "      << std::endl        
+            << "-I<INDEX_FILENAME> "  << std::endl        
+            << "-N<NAN_FILENAME> "    << std::endl      
+            << " [-R<runtime_count>]" << std::endl         
+            << "(All Files are CSV format, default runtime_count = 1)"
+            << std::endl;
+}
 
 /* non-generated functions */
 std::ostream& operator<<(std::ostream& s_, emxArray_real_T& array_)
@@ -184,10 +204,55 @@ static void main_shuffleF(void)
  *                const char * const argv[]
  * Return Type  : int
  */
-int main(int argc, const char * const argv[])
+int main(int argc, char *argv[])
 {
-  (void)argc;
-  (void)argv;
+  int c;
+  std::string X_csv, Y_csv, Ind_csv, NaN_csv;
+  unsigned runCnt = 1;
+
+  while ((c = getopt (argc, argv, "X:Y:I:N:r:")) != -1)
+    switch (c)
+    {    
+      case 'X':
+        X_csv = optarg;
+        break;
+      case 'Y':
+        Y_csv = optarg;
+        break;
+      case 'I':
+        Ind_csv = optarg;
+        break;
+      case 'N':
+        NaN_csv = optarg;
+        break;
+      case 'r':
+        runCnt = atoi(optarg);
+        break;
+      case '?':
+        usage(argv[0]);
+        exit(0);
+      default:
+        std::cerr << "Unexpected option:" << c << std::endl;
+        usage(argv[0]);
+        abort();
+    }
+
+  if (!X_csv.length() || 
+      !Y_csv.length() || 
+      !Ind_csv.length() || 
+      !NaN_csv.length())
+  {
+     std::cerr << "One or more arguments missing" << std::endl;
+     usage(argv[0]);
+     abort();
+  }
+
+  std::cout << "Using X=" << X_csv << std::endl
+            << ", Y=" << Y_csv << std::endl
+            << ", Index=" << Ind_csv << std::endl
+            << ", NaN=="  << NaN_csv << std::endl
+            << ", Iterations=" << runCnt 
+            << std::endl;
 
   /* The initialize function is being called automatically from your entry-point function. So, a call to initialize is not included here. */
   /* Invoke the entry-point functions.

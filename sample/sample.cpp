@@ -65,15 +65,23 @@ static void usage(const char *pgm_)
 /* non-generated functions */
 std::ostream& operator<<(std::ostream& s_, emxArray_real_T& array_)
 {
-  s_ << "[" << array_.numDimensions << "], allocated size=" << array_.allocatedSize << "={";
+  s_ << ": dimensions=" << array_.numDimensions 
+     << ", allocated size=" << array_.allocatedSize 
+     << ", size pointer=" << array_.size
+     << "={";
   for (auto i = 0; i < array_.numDimensions; ++i)
   {
-    if (i != 0)
-        s_ << ",";
-    if (array_.data)
-        s_ << array_.data[i];
-    else
-        s_ << "NULL";
+    std::cout << "{";
+    for (auto j = 0; j < array_.size[j]; ++j)
+    {
+        if (j != 0)
+            s_ << ",";
+        if (array_.data[j])
+            s_ << array_.data[j];
+        else
+            s_ << "NULL";
+    }
+    s_ << "}";
   }
   s_ << "}";
   return s_;
@@ -93,6 +101,15 @@ static emxArray_real_T *argInit_Unboundedx1_real_T(void);
 static double argInit_real_T(void);
 static emxArray_real_T *c_argInit_UnboundedxUnbounded_r(void);
 static void main_shuffleF(void);
+
+struct Args
+{
+  emxArray_real_T *F;
+  emxArray_real_T *X;
+  emxArray_real_T *ind;
+  emxArray_real_T *y;
+  double leastNansCols = 1.0;
+};
 
 /* Function Definitions */
 /*

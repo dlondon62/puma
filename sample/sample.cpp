@@ -47,8 +47,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string>
+#include <vector>
+#include <stdexcept>
 
 using namespace std;
+
+typedef std::vector<double> Row;
+typedef std::vector<Row> DataV;
 
 static void usage(const char *pgm_)
 {
@@ -76,10 +81,7 @@ std::ostream& operator<<(std::ostream& s_, emxArray_real_T& array_)
     {
         if (j != 0)
             s_ << ",";
-        if (array_.data[j])
-            s_ << array_.data[j];
-        else
-            s_ << "NULL";
+        s_ << array_.data[j];
     }
     s_ << "}";
   }
@@ -102,13 +104,86 @@ static double argInit_real_T(void);
 static emxArray_real_T *c_argInit_UnboundedxUnbounded_r(void);
 static void main_shuffleF(void);
 
+DataV parse_csv(const std::string& fileName_)
+{
+    ifstream fs;
+    fs.open(fileName_, std::ifstream::in);
+    if (!fs)
+    {
+        throw std::runtime_error("unable to open filename=" + fileName_ + 
+            + ":" +  strerror(errno));
+    }
+
+    DataV v;
+    std::string line;
+    size_t currPos = 0, idx=0;
+    while (std::getline(fs, line))
+    {
+        Row row;
+        while((idx = line.find(',', currPos)) != std::string::npos)
+        {
+           string elmt = line.substr(currPos, idx - currPos);
+           double ve = atof(elmt.c_str());
+           row.push_back(ve);
+           currPos = idx+1;
+        }
+        if (row.size() == 0)
+        {
+           double ve = atof(line.c_str());
+           row.push_back(ve);
+        }
+        v.push_back(row);
+    }
+    return v;
+}
+
+void load_from_csv(const std::string& fileName_, emxArray_real_T *array_)
+{
+   DataV v = parse_csv(fileName_);
+   if (v.size() > 0)
+   {
+      size_t cols = v.begin()->size();
+      std::cout << "Loaded file=" << fileName_
+                << ", rows=" << v.size()
+                << ", cols=" << cols << std::endl;
+      //FIXME: load CSV here.
+   }
+   else 
+    throw std::runtime_error("empty vector when loading csv filename=" + fileName_);
+}
+
+void load_from_csv(const std::string& fileName_, double& value_)
+{
+   DataV v = parse_csv(fileName_);
+   if (v.size() != 1)
+       throw std::runtime_error("invalid number of parsed elements: " + std::to_string(v.size()));
+   Row r = v[0];
+   if (r.size() != 1)
+       throw std::runtime_error("Expected 1 element, received: " + std::to_string(r.size()));
+   value_ = r[0];
+}
+
 struct Args
 {
-  emxArray_real_T *F;
   emxArray_real_T *X;
-  emxArray_real_T *ind;
-  emxArray_real_T *y;
-  double leastNansCols = 1.0;
+  emxArray_real_T *Y;
+  emxArray_real_T *Ind;
+  emxArray_real_T *NaN;
+  emxArray_real_T *F;
+  double nansCols = 1.0;
+
+  Args(const std::string& x_file,
+       const std::string& y_file,
+       const std::string& ind_file,
+       const std::string& nan_file,
+       unsigned runTime_)
+  {
+    load_from_csv(x_file, X);
+    load_from_csv(y_file, Y);
+    load_from_csv(ind_file, Ind);
+    load_from_csv(ind_file, NaN);
+    load_from_csv(nan_file, nansCols);
+  }
 };
 
 /* Function Definitions */
@@ -270,6 +345,7 @@ int main(int argc, char *argv[])
             << ", NaN=="  << NaN_csv << std::endl
             << ", Iterations=" << runCnt 
             << std::endl;
+  Args arg(X_csv, Y_csv, Ind_csv, NaN_csv, runCnt); 
 
   /* The initialize function is being called automatically from your entry-point function. So, a call to initialize is not included here. */
   /* Invoke the entry-point functions.

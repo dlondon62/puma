@@ -99,7 +99,7 @@ std::ostream& operator<<(std::ostream& s_, emxArray_real_T *array_)
 }
 
 /* Function Declarations */
-static emxArray_real_T *argInit_Unboundedx1_real_T(void);
+static emxArray_real_T *argInit_Unboundedx1_real_T(const DataV& dataV_);
 static double argInit_real_T(void);
 static emxArray_real_T *c_argInit_UnboundedxUnbounded_r
     (const DataV& dataV_);
@@ -154,11 +154,8 @@ void load_from_csv(const std::string& fileName_, emxArray_real_T *array_)
                 << ", cols=" << cols << std::endl;
       if (cols > 1)
         array_ = c_argInit_UnboundedxUnbounded_r(v);
-      else
-        if (cols ==1)
-        {
-            //FIXME: load 1-dimensional array below
-        }
+      else if (cols == 1)
+        array_ = argInit_Unboundedx1_real_T(v);
       else  
         throw std::runtime_error("0 columsn when loadingg csv filename=" + fileName_);
    }
@@ -219,22 +216,21 @@ struct Args
  * Arguments    : void
  * Return Type  : emxArray_real_T *
  */
-static emxArray_real_T *argInit_Unboundedx1_real_T(void)
+static emxArray_real_T *argInit_Unboundedx1_real_T(const DataV& dataV_)
 {
-  static const int iv[1] = { 2 };
-
   emxArray_real_T *result;
   int idx0;
+  int rows = (int)dataV_.size();
 
   /* Set the size of the array.
      Change this size to the value that the application requires. */
-  result = emxCreateND_real_T(1, iv);
+  result = emxCreateND_real_T(1, &rows);
 
   /* Loop over the array to initialize each element. */
   for (idx0 = 0; idx0 < result->size[0U]; idx0++) {
     /* Set the value of the array element.
        Change this value to the value that the application requires. */
-    result->data[idx0] = argInit_real_T();
+    result->data[idx0] = dataV_[idx0][0];
   }
 
   return result;
@@ -316,8 +312,10 @@ static void main_shuffleF(void)
   y = c_argInit_UnboundedxUnbounded_r(dummyV);
 
   /* Initialize function input argument 'ind'. */
-  ind = argInit_Unboundedx1_real_T();
-
+  dummyV.clear();
+  dummyRow.push_back(0.0);
+  dummyRow.push_back(0.0);
+  ind = argInit_Unboundedx1_real_T(dummyV);
   std::cout << std::endl << "arguments before call to shuffleF"
             << std::endl
             << "X"     << X << std::endl

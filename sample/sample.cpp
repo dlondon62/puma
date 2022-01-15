@@ -120,6 +120,8 @@ DataV parse_csv(const std::string& fileName_)
     size_t currPos = 0, idx=0;
     while (std::getline(fs, line))
     {
+        currPos = 0;
+        idx=0;
         Row row;
         while((idx = line.find(',', currPos)) != std::string::npos)
         {
@@ -128,11 +130,14 @@ DataV parse_csv(const std::string& fileName_)
            row.push_back(ve);
            currPos = idx+1;
         }
-        if (row.size() == 0)
+        
+        if (currPos < line.length())
         {
+           string elmt = line.substr(currPos, line.length() - currPos);
            double ve = atof(line.c_str());
            row.push_back(ve);
         }
+        
         v.push_back(row);
     }
     return v;
@@ -144,13 +149,23 @@ void load_from_csv(const std::string& fileName_, emxArray_real_T *array_)
    if (v.size() > 0)
    {
       size_t cols = v.begin()->size();
-      std::cout << "Loaded file=" << fileName_
+      std::cout << "Parsed file=" << fileName_
                 << ", rows=" << v.size()
                 << ", cols=" << cols << std::endl;
-      //FIXME: load CSV here.
+      if (cols > 1)
+        array_ = c_argInit_UnboundedxUnbounded_r(v);
+      else
+        if (cols ==1)
+        {
+            //FIXME: load 1-dimensional array below
+        }
+      else  
+        throw std::runtime_error("0 columsn when loadingg csv filename=" + fileName_);
    }
    else 
     throw std::runtime_error("empty vector when loading csv filename=" + fileName_);
+    
+   std::cout << "Loaded file=" << fileName_ << std::endl;
 }
 
 void load_from_csv(const std::string& fileName_, double& value_)
@@ -253,10 +268,20 @@ static emxArray_real_T *c_argInit_UnboundedxUnbounded_r
 
   /* Loop over the array to initialize each element. */
   for (idx0 = 0; idx0 < result->size[0U]; idx0++) {
+      Row row = dataV_[idx0];
+      if (row.size() != cols)
+      {
+          throw std::runtime_error(std::string("Invalid number of cols for row=") +
+                std::to_string(idx0) +
+                ": row size=" + std::to_string(row.size()) + 
+                ", cols=" + std::to_string(cols));
+      }
     for (idx1 = 0; idx1 < result->size[1U]; idx1++) {
       /* Set the value of the array element.
          Change this value to the value that the application requires. */
-      result->data[idx0 + result->size[0] * idx1] = argInit_real_T();
+      double elmt = row[idx1];
+      result->data[idx0 + result->size[0] * idx1] = elmt;
+      //double elmt = argInit_real_T();
     }
   }
 

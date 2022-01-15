@@ -101,7 +101,8 @@ std::ostream& operator<<(std::ostream& s_, emxArray_real_T *array_)
 /* Function Declarations */
 static emxArray_real_T *argInit_Unboundedx1_real_T(void);
 static double argInit_real_T(void);
-static emxArray_real_T *c_argInit_UnboundedxUnbounded_r(void);
+static emxArray_real_T *c_argInit_UnboundedxUnbounded_r
+    (const DataV& dataV_);
 static void main_shuffleF(void);
 
 DataV parse_csv(const std::string& fileName_)
@@ -165,11 +166,11 @@ void load_from_csv(const std::string& fileName_, double& value_)
 
 struct Args
 {
-  emxArray_real_T *X;
-  emxArray_real_T *Y;
-  emxArray_real_T *Ind;
-  emxArray_real_T *NaN;
-  emxArray_real_T *F;
+  emxArray_real_T *X = nullptr;
+  emxArray_real_T *Y = nullptr;
+  emxArray_real_T *Ind = nullptr;
+  emxArray_real_T *NaN = nullptr;
+  emxArray_real_T *F = nullptr;
   double nansCols = 1.0;
 
   Args(const std::string& x_file,
@@ -181,8 +182,20 @@ struct Args
     load_from_csv(x_file, X);
     load_from_csv(y_file, Y);
     load_from_csv(ind_file, Ind);
-    load_from_csv(ind_file, NaN);
     load_from_csv(nan_file, nansCols);
+  }
+  ~Args()
+  {
+    if (F)
+      emxDestroyArray_real_T(F);
+    if (Ind)
+      emxDestroyArray_real_T(Ind);
+    if (Y)
+      emxDestroyArray_real_T(Y);
+    if (X)
+      emxDestroyArray_real_T(X);
+    if (NaN)
+      emxDestroyArray_real_T(NaN);
   }
 };
 
@@ -225,7 +238,8 @@ static double argInit_real_T(void)
  * Arguments    : void
  * Return Type  : emxArray_real_T *
  */
-static emxArray_real_T *c_argInit_UnboundedxUnbounded_r(void)
+static emxArray_real_T *c_argInit_UnboundedxUnbounded_r
+    (const DataV& dataV_)
 {
   emxArray_real_T *result;
   int idx0;
@@ -233,7 +247,9 @@ static emxArray_real_T *c_argInit_UnboundedxUnbounded_r(void)
 
   /* Set the size of the array.
      Change this size to the value that the application requires. */
-  result = emxCreate_real_T(2, 2);
+  size_t rows = dataV_.size();
+  size_t cols = dataV_.begin()->size();
+  result = emxCreate_real_T(rows, cols);
 
   /* Loop over the array to initialize each element. */
   for (idx0 = 0; idx0 < result->size[0U]; idx0++) {
@@ -259,12 +275,20 @@ static void main_shuffleF(void)
   emxArray_real_T *y;
   emxInitArray_real_T(&F, 2);
 
+  //dummy 2-dimensional Vector {2, 2}. Will remove this eventually
+  //in favor or Args.
+  DataV dummyV;
+  Row   dummyRow;
+  dummyRow.push_back(0.0);
+  dummyRow.push_back(0.0);
+  dummyV.push_back(dummyRow);
+
   /* Initialize function 'shuffleF' input arguments. */
   /* Initialize function input argument 'X'. */
-  X = c_argInit_UnboundedxUnbounded_r();
+  X = c_argInit_UnboundedxUnbounded_r(dummyV);
 
   /* Initialize function input argument 'y'. */
-  y = c_argInit_UnboundedxUnbounded_r();
+  y = c_argInit_UnboundedxUnbounded_r(dummyV);
 
   /* Initialize function input argument 'ind'. */
   ind = argInit_Unboundedx1_real_T();
@@ -280,6 +304,7 @@ static void main_shuffleF(void)
   /* Call the entry-point 'shuffleF'. */
   shuffleF(X, y, ind, argInit_real_T(), F);
   std::cout << std::endl << "arguments after call to shuffleF"
+            << std::endl
             << "X"    << X << std::endl
             << "y"    << y << std::endl 
             << "ind"  << ind << std::endl

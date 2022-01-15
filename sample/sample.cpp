@@ -277,7 +277,6 @@ static emxArray_real_T *c_argInit_UnboundedxUnbounded_r
          Change this value to the value that the application requires. */
       double elmt = row[idx1];
       result->data[idx0 + result->size[0] * idx1] = elmt;
-      //double elmt = argInit_real_T();
     }
   }
 

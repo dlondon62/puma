@@ -49,6 +49,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <sys/time.h>
 
 using namespace std;
 
@@ -62,7 +63,8 @@ static void usage(const char *pgm_)
             << "-Y<Y_FILENAME> "      << std::endl        
             << "-I<INDEX_FILENAME> "  << std::endl        
             << "-N<NAN_FILENAME> "    << std::endl      
-            << " [-R<runtime_count>]" << std::endl         
+            << " [-r<runtime_count>]" << std::endl         
+            << "[-v](verbose)"        << std::endl
             << "(All Files are CSV format, default runtime_count = 1)"
             << std::endl;
 }
@@ -181,19 +183,24 @@ struct Args
 {
   emxArray_real_T *X = nullptr;
   emxArray_real_T *Y = nullptr;
+  emxArray_real_T *Y_save = nullptr;
   emxArray_real_T *Ind = nullptr;
   emxArray_real_T *NaN = nullptr;
   emxArray_real_T *F = nullptr;
   double nansCols = 1.0;
+  bool   verbose = false;
 
   Args(const std::string& x_file,
        const std::string& y_file,
        const std::string& ind_file,
        const std::string& nan_file,
-       unsigned runTime_)
+       unsigned runTime_,
+       bool verbose_=false)
+  : verbose(verbose_) 
   {
     load_from_csv(x_file, &X);
     load_from_csv(y_file, &Y);
+    load_from_csv(y_file, &Y_save);
     load_from_csv(ind_file, &Ind);
     load_from_csv(nan_file, nansCols);
     emxInitArray_real_T(&F, 2);
@@ -350,8 +357,9 @@ int main(int argc, char *argv[])
   int c;
   std::string X_csv, Y_csv, Ind_csv, NaN_csv;
   unsigned runCnt = 1;
+  bool verbose = false;
 
-  while ((c = getopt (argc, argv, "X:Y:I:N:r:")) != -1)
+  while ((c = getopt (argc, argv, "X:Y:I:N:r:v")) != -1)
     switch (c)
     {    
       case 'X':
@@ -368,6 +376,9 @@ int main(int argc, char *argv[])
         break;
       case 'r':
         runCnt = atoi(optarg);
+        break;
+      case 'v':
+        verbose = true;
         break;
       case '?':
         usage(argv[0]);
@@ -395,21 +406,40 @@ int main(int argc, char *argv[])
             << ", Iterations=" << runCnt 
             << std::endl;
   Args arg(X_csv, Y_csv, Ind_csv, NaN_csv, runCnt); 
-  std::cout << std::endl << "arguments before call to shuffleF"
-            << std::endl
-            << "X"     << arg.X << std::endl
-            << "Y"     << arg.Y << std::endl 
-            << "ind"  <<  arg.Ind << std::endl
-            << "F"    <<  arg.F << std::endl
-            << std::endl;
-  shuffleF(arg.X, arg.Y, arg.Ind, arg.nansCols, arg.F);
-  std::cout << std::endl << "arguments after call to shuffleF"
-            << std::endl
-            << "X"     << arg.X << std::endl
-            << "Y"     << arg.Y << std::endl 
-            << "ind"  <<  arg.Ind << std::endl
-            << "F"    <<  arg.F << std::endl
-            << std::endl;
+  if (verbose)
+  {
+    std::cout << std::endl << "arguments before call to shuffleF"
+              << std::endl
+              << "X"     << arg.X << std::endl
+              << "Y"     << arg.Y << std::endl 
+              << "ind"  <<  arg.Ind << std::endl
+              << "F"    <<  arg.F << std::endl
+              << std::endl;
+    shuffleF(arg.X, arg.Y, arg.Ind, arg.nansCols, arg.F);
+    std::cout << std::endl << "arguments after call to shuffleF"
+              << std::endl
+              << "X"     << arg.X << std::endl
+              << "Y"     << arg.Y << std::endl 
+              << "ind"  <<  arg.Ind << std::endl
+              << "F"    <<  arg.F << std::endl
+              << std::endl;
+  }
+  else
+  {
+     std::cout << "Calculating Timing " << std::endl;
+     struct timeval start, end;
+     gettimeofday(&start, 0);
+     for (auto i = 0; i < runCnt; ++i)
+     {
+        shuffleF(arg.X, arg.Y, arg.Ind, arg.nansCols, arg.F);
+        arg.Y = arg.Y_save;
+     }
+     gettimeofday(&end, 0);
+     unsigned long etime = ((end.tv_sec * 1000000) + end.tv_usec) - ((start.tv_sec * 1000000) + start.tv_usec);
+     std::cout << std::endl << "Elapsed time=" 
+               << etime 
+               << std::endl;
+  }
 
   /* The initialize function is being called automatically from your entry-point function. So, a call to initialize is not included here. */
   /* Invoke the entry-point functions.

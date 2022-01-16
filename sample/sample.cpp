@@ -77,7 +77,7 @@ std::ostream& operator<<(std::ostream& s_, emxArray_real_T& array_)
   for (auto i = 0; i < array_.numDimensions; ++i)
   {
     std::cout << "{";
-    for (auto j = 0; j < array_.size[j]; ++j)
+    for (auto j = 0; j < array_.size[i]; ++j)
     {
         if (j != 0)
             s_ << ",";
@@ -143,7 +143,7 @@ DataV parse_csv(const std::string& fileName_)
     return v;
 }
 
-void load_from_csv(const std::string& fileName_, emxArray_real_T *array_)
+void load_from_csv(const std::string& fileName_, emxArray_real_T **array_)
 {
    DataV v = parse_csv(fileName_);
    if (v.size() > 0)
@@ -153,9 +153,9 @@ void load_from_csv(const std::string& fileName_, emxArray_real_T *array_)
                 << ", rows=" << v.size()
                 << ", cols=" << cols << std::endl;
       if (cols > 1)
-        array_ = c_argInit_UnboundedxUnbounded_r(v);
+        *array_ = c_argInit_UnboundedxUnbounded_r(v);
       else if (cols == 1)
-        array_ = argInit_Unboundedx1_real_T(v);
+        *array_ = argInit_Unboundedx1_real_T(v);
       else  
         throw std::runtime_error("0 columsn when loadingg csv filename=" + fileName_);
    }
@@ -174,6 +174,7 @@ void load_from_csv(const std::string& fileName_, double& value_)
    if (r.size() != 1)
        throw std::runtime_error("Expected 1 element, received: " + std::to_string(r.size()));
    value_ = r[0];
+   std::cout << "Loaded file=" << fileName_ << ", value=" << value_ << std::endl;
 }
 
 struct Args
@@ -191,10 +192,11 @@ struct Args
        const std::string& nan_file,
        unsigned runTime_)
   {
-    load_from_csv(x_file, X);
-    load_from_csv(y_file, Y);
-    load_from_csv(ind_file, Ind);
+    load_from_csv(x_file, &X);
+    load_from_csv(y_file, &Y);
+    load_from_csv(ind_file, &Ind);
     load_from_csv(nan_file, nansCols);
+    emxInitArray_real_T(&F, 2);
   }
   ~Args()
   {
@@ -393,15 +395,30 @@ int main(int argc, char *argv[])
             << ", Iterations=" << runCnt 
             << std::endl;
   Args arg(X_csv, Y_csv, Ind_csv, NaN_csv, runCnt); 
+  std::cout << std::endl << "arguments before call to shuffleF"
+            << std::endl
+            << "X"     << arg.X << std::endl
+            << "Y"     << arg.Y << std::endl 
+            << "ind"  <<  arg.Ind << std::endl
+            << "F"    <<  arg.F << std::endl
+            << std::endl;
+  shuffleF(arg.X, arg.Y, arg.Ind, arg.nansCols, arg.F);
+  std::cout << std::endl << "arguments after call to shuffleF"
+            << std::endl
+            << "X"     << arg.X << std::endl
+            << "Y"     << arg.Y << std::endl 
+            << "ind"  <<  arg.Ind << std::endl
+            << "F"    <<  arg.F << std::endl
+            << std::endl;
 
   /* The initialize function is being called automatically from your entry-point function. So, a call to initialize is not included here. */
   /* Invoke the entry-point functions.
      You can call entry-point functions multiple times. */
-  main_shuffleF();
+  //main_shuffleF();
 
   /* Terminate the application.
      You do not need to do this more than one time. */
-  shuffleF_terminate();
+  //shuffleF_terminate();
   return 0;
 }
 

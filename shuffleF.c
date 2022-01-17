@@ -124,6 +124,8 @@ void shuffleF(const emxArray_real_T *X, emxArray_real_T *y, const
   }
 
   i = y->size[0] * y->size[1];
+  y = b_y;
+  /*
   y->size[0] = b_y->size[0];
   y->size[1] = b_y->size[1];
   emxEnsureCapacity_real_T(y, i);
@@ -131,13 +133,14 @@ void shuffleF(const emxArray_real_T *X, emxArray_real_T *y, const
   for (i = 0; i < loop_ub; i++) {
     y->data[i] = b_y->data[i];
   }
+  */
 
   i = F->size[0] * F->size[1];
   F->size[0] = 1;
   F->size[1] = nTimes;
   emxEnsureCapacity_real_T(F, i);
   for (i = 0; i < nTimes; i++) {
-    F->data[i] = rtNaN;
+      F->data[i] = rtNaN;
   }
 
   emxInit_boolean_T(&subsetiter, 1);
